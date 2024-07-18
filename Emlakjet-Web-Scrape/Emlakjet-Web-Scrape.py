@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-# Ana sayfadaki ilanların linklerini toplamak için URL
 url = 'https://www.emlakjet.com/gunluk-kiralik-konut/'
 response = requests.get(url)
 html_data = response.text
