@@ -6,47 +6,47 @@ import iso8601
 from datetime import datetime, timedelta
 
 url = 'https://www.emlakjet.com/gunluk-kiralik-konut'
-previous_ids = set()  
-json_file_path = 'ilanlar.json'
+onceki_ids = set()
+json_dosya_yolu = 'ilanlar.json'
 
-def fetch_listing_ids_and_links():
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    listings = soup.find_all('div', class_='_3qUI9q')
+def ilan_id_ve_linkleri_getir():
+    cevap = requests.get(url)
+    soup = BeautifulSoup(cevap.text, 'html.parser')
+    ilanlar = soup.find_all('div', class_='_3qUI9q')
 
-    current_ids_and_links = []
-    for listing in listings:
-        link_tag = listing.find('a', href=True)
-        if link_tag:
-            ilan_id = listing.get('data-id')
+    mevcut_id_ve_linkler = []
+    for ilan in ilanlar:
+        link_etiketi = ilan.find('a', href=True)
+        if link_etiketi:
+            ilan_id = ilan.get('data-id')
             if ilan_id:
-                current_ids_and_links.append((ilan_id, link_tag['href']))
+                mevcut_id_ve_linkler.append((ilan_id, link_etiketi['href']))
 
-    return current_ids_and_links
+    return mevcut_id_ve_linkler
 
-def fetch_listing_details(ilan_id, ilan_link):
+def ilan_detaylarini_getir(ilan_id, ilan_link):
     ilan_url = f'https://www.emlakjet.com{ilan_link}'
-    ilan_response = requests.get(ilan_url)
-    ilan_soup = BeautifulSoup(ilan_response.text, 'html.parser')
+    ilan_cevap = requests.get(ilan_url)
+    ilan_soup = BeautifulSoup(ilan_cevap.text, 'html.parser')
 
-    # İlan başlığı kontrolü
-    ilan_basligi_tag = ilan_soup.find('h1', class_="_3OKyci")
-    ilan_basligi = ilan_basligi_tag.text.strip() if ilan_basligi_tag else "Başlık bulunamadı"
+  
+    ilan_basligi_etiketi = ilan_soup.find('h1', class_="_3OKyci")
+    ilan_basligi = ilan_basligi_etiketi.text.strip() if ilan_basligi_etiketi else "Baslik bulunamadi"
 
-    # İlan fiyatı kontrolü
-    ilan_fiyati_tag = ilan_soup.find('div', class_='_2TxNQv')
-    ilan_fiyati = ilan_fiyati_tag.text.strip() if ilan_fiyati_tag else "Fiyat bulunamadı"
 
-    # İlan konumu kontrolü
-    ilan_konumu_tag = ilan_soup.find('div', class_='_3VQ1JB')
-    ilan_konumu = ilan_konumu_tag.find('p').text.strip() if ilan_konumu_tag and ilan_konumu_tag.find('p') else "Konum bulunamadı"
+    ilan_fiyati_etiketi = ilan_soup.find('div', class_='_2TxNQv')
+    ilan_fiyati = ilan_fiyati_etiketi.text.strip() if ilan_fiyati_etiketi else "Fiyat bulunamadi"
+
+
+    ilan_konumu_etiketi = ilan_soup.find('div', class_='_3VQ1JB')
+    ilan_konumu = ilan_konumu_etiketi.find('p').text.strip() if ilan_konumu_etiketi and ilan_konumu_etiketi.find('p') else "Konum bulunamadi"
 
     detaylar = {
         'url': ilan_url,
-        'başlık': ilan_basligi,
+        'baslik': ilan_basligi,
         'fiyat': ilan_fiyati,
         'konum': ilan_konumu,
-        'İlan Numarası': ilan_id
+        'Ilan Numarasi': ilan_id
     }
 
     ilan_detaylari = ilan_soup.find_all('div', class_='_35T4WV')
@@ -57,68 +57,63 @@ def fetch_listing_details(ilan_id, ilan_link):
             bilgi = bilgi_kategori[1].text.strip()
             detaylar[kategori] = bilgi
 
-    # İlan oluşturma tarihini ve güncelleme tarihini dönüştürme
+    # Tarihi donusturme
     if 'İlan Oluşturma Tarihi' in detaylar:
         try:
-            çevrilmiş_tarih = iso8601.tarihi_çevir(detaylar['İlan Oluşturma Tarihi'])
-            çevrilmiş_tarih_dt = datetime.fromisoformat(çevrilmiş_tarih)
-            if datetime.now() - çevrilmiş_tarih_dt > timedelta(days=3):
-                print(f"İlan oluşturulma tarihi {ilan_id} şu anın tarihinden 3 günden eski, listeye alınmayacak.")
+            cevrilmis_tarih = iso8601.tarihi_çevir(detaylar['İlan Oluşturma Tarihi'])
+            cevrilmis_tarih_dt = datetime.fromisoformat(cevrilmis_tarih)
+            if datetime.now() - cevrilmis_tarih_dt > timedelta(days=3):
                 return None
-            detaylar['İlan Oluşturma Tarihi'] = çevrilmiş_tarih
+            detaylar['İlan Oluşturma Tarihi'] = cevrilmis_tarih
         except Exception as e:
-            detaylar['İlan Oluşturma Tarihi'] = f"Tarih dönüştürme hatası: {e}"
+            detaylar['İlan Oluşturma Tarihi'] = f"Tarih donusturme hatasi: {e}"
 
     if 'İlan Güncelleme Tarihi' in detaylar:
         try:
             detaylar['İlan Güncelleme Tarihi'] = iso8601.tarihi_çevir(detaylar['İlan Güncelleme Tarihi'])
         except Exception as e:
-            detaylar['İlan Güncelleme Tarihi'] = f"Tarih dönüştürme hatası: {e}"
+            detaylar['İlan Güncelleme Tarihi'] = f"Tarih donusturme hatasi: {e}"
 
     return detaylar
 
-def load_previous_data():
+def onceki_verileri_yukle():
     try:
-        with open(json_file_path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
-            if not isinstance(data, dict):
-                print("JSON dosyası geçersiz formatta.")
+        with open(json_dosya_yolu, 'r', encoding='utf-8') as dosya:
+            veri = json.load(dosya)
+            if not isinstance(veri, dict):
+                print("JSON dosyasi gecersiz formatta.")
                 return {}
-            return data
+            return veri
     except FileNotFoundError:
-        print("JSON dosyası bulunamadı. Yeni bir dosya oluşturulacak.")
         return {}
     except json.JSONDecodeError:
-        print("JSON dosyası okunamadı veya bozuk. Yeni bir dosya oluşturulacak.")
         return {}
 
-def save_to_json(data):
-    with open(json_file_path, 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+def jsona_kaydet(veri):
+    with open(json_dosya_yolu, 'w', encoding='utf-8') as dosya:
+        json.dump(veri, dosya, ensure_ascii=False, indent=4)
 
-print("Başlangıçta ilanlar kontrol ediliyor...")
-
-previous_data = load_previous_data()
-previous_ids = set(previous_data.keys())  # Mevcut ID'leri yükle
+onceki_veriler = onceki_verileri_yukle()
+onceki_ids = set(onceki_veriler.keys())  
 
 while True:
-    print("Yeni ilanlar kontrol ediliyor...")
-    current_ids_and_links = fetch_listing_ids_and_links()
+    mevcut_id_ve_linkler = ilan_id_ve_linkleri_getir()
+    mevcut_veri = {}
+    yeni_id_ve_linkler = [(ilan_id, link) for ilan_id, link in mevcut_id_ve_linkler if ilan_id not in onceki_ids]
     
-    current_data = {}
-    new_ids_and_links = [(ilan_id, link) for ilan_id, link in current_ids_and_links if ilan_id not in previous_ids]
-    if new_ids_and_links:
-        print(f"Yeni ilanlar bulundu: {len(new_ids_and_links)} adet")
-        for ilan_id, link in new_ids_and_links:
-            print(f"Yeni ilan işleniyor: ID - {ilan_id}, Link - {link}")
-            detaylar = fetch_listing_details(ilan_id, link)
-            if detaylar is not None:  # Sadece geçerli ilanları ekle
-                current_data[ilan_id] = detaylar
+    if yeni_id_ve_linkler:
+        toplam_yeni_ilan = len(yeni_id_ve_linkler)
+        for ilan_id, link in yeni_id_ve_linkler:
+            detaylar = ilan_detaylarini_getir(ilan_id, link)
+            if detaylar is not None: 
+                mevcut_veri[ilan_id] = detaylar
+                print(f"Kayit edilen ilan ID'si: {ilan_id}")
     
-    if current_data:
-        previous_data.update(current_data)
-        save_to_json(previous_data)
-        previous_ids.update(current_data.keys())
+    if mevcut_veri:
+        onceki_veriler.update(mevcut_veri)
+        jsona_kaydet(onceki_veriler)
+        onceki_ids.update(mevcut_veri.keys())
     
-    print("Yeni ilanlar için 2 dakika bekleniyor...")
-    time.sleep(120)
+    print(f"Toplam {len(yeni_id_ve_linkler)} ilan bulundu, {len(mevcut_veri)} ilan kaydedildi.")
+    print("Yeni ilanlar icin 5 dakika bekleniyor...")
+    time.sleep(300)
