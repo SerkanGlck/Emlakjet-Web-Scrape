@@ -60,7 +60,11 @@ def ilan_detaylarini_getir(ilan_id, ilan_link):
     # Tarihi donusturme
     if 'İlan Oluşturma Tarihi' in detaylar:
         try:
+<<<<<<< Updated upstream
             cevrilmis_tarih = iso8601.tarihi_çevir(detaylar['İlan Oluşturma Tarihi'])
+=======
+            cevrilmis_tarih = iso8601.tarihi_cevir(detaylar['İlan Oluşturma Tarihi'])
+>>>>>>> Stashed changes
             cevrilmis_tarih_dt = datetime.fromisoformat(cevrilmis_tarih)
             if datetime.now() - cevrilmis_tarih_dt > timedelta(days=3):
                 return None
@@ -70,7 +74,11 @@ def ilan_detaylarini_getir(ilan_id, ilan_link):
 
     if 'İlan Güncelleme Tarihi' in detaylar:
         try:
+<<<<<<< Updated upstream
             detaylar['İlan Güncelleme Tarihi'] = iso8601.tarihi_çevir(detaylar['İlan Güncelleme Tarihi'])
+=======
+            detaylar['İlan Güncelleme Tarihi'] = iso8601.tarihi_cevir(detaylar['İlan Güncelleme Tarihi'])
+>>>>>>> Stashed changes
         except Exception as e:
             detaylar['İlan Güncelleme Tarihi'] = f"Tarih donusturme hatasi: {e}"
 
