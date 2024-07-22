@@ -9,7 +9,7 @@ Emlakjet Web Scraper, Emlakjet web sitesindeki gayrimenkul ilanlarını tarayara
 - Emlakjet web sitesinden ilan verilerini toplar.
 - Çeşitli tarih formatlarını ISO 8601 formatına dönüştürür.
 - İlan verilerini JSON formatında saklar.
-- Her 2 dakikada bir yeni ilanları kontrol eder ve veri tabanına ekler.
+- Her 5 dakikada bir yeni ilanları kontrol eder ve veri tabanına ekler.
 
 ## Gereksinimler
 
