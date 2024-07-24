@@ -34,17 +34,17 @@ def tarihi_cevir(tarih_str):
     tarih_str = tarih_str.lower().strip()
     tarih_str = tarih_str.replace('yayinlanma tarihi:', '').replace('pazartesi', '').replace('sali', '').replace('carsamba', '').replace('persembe', '').replace('cuma', '').replace('cumartesi', '').replace('pazar', '').replace(',', '').replace('.', '').replace('|', '').strip()
 
-    if 'saat once' in tarih_str:
+    if 'saat önce' in tarih_str:
         saat_once = int(tarih_str.split(' ')[0])
         cevrilmis_tarih = datetime.now() - timedelta(hours=saat_once)
         return cevrilmis_tarih.isoformat()
     
-    if 'gun once' in tarih_str:
+    if 'gün önce' in tarih_str: # !!!! gün önce olucak hata
         gun_once = int(tarih_str.split(' ')[0])
         cevrilmis_tarih = datetime.now() - timedelta(days=gun_once)
         return cevrilmis_tarih.isoformat()
     
-    if 'ay once' in tarih_str:
+    if 'ay önce' in tarih_str:
         ay_once = int(tarih_str.split(' ')[0])
         cevrilmis_tarih = datetime.now()
         ay = (cevrilmis_tarih.month - ay_once) % 12 or 12
@@ -53,16 +53,16 @@ def tarihi_cevir(tarih_str):
         cevrilmis_tarih = datetime(yil, ay, gun)
         return cevrilmis_tarih.isoformat()
     
-    if 'yil once' in tarih_str:
+    if 'yıl önce' in tarih_str:
         yil_once = int(tarih_str.split(' ')[0])
         cevrilmis_tarih = datetime.now() - timedelta(days=yil_once * 365)
         return cevrilmis_tarih.isoformat()
     
-    if 'hafta once' in tarih_str:
+    if 'hafta önce' in tarih_str:
         hafta_once = int(tarih_str.split(' ')[0])
         cevrilmis_tarih = datetime.now() - timedelta(weeks=hafta_once)
         return cevrilmis_tarih.isoformat()
-    
+
     # Tarih bileşenlerini bulmak için
     tarih_bilesenleri = tarih_str.split()
     gun = None
